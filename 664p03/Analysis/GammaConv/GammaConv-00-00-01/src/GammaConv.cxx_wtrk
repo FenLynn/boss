@@ -1,0 +1,181 @@
+#include "GammaConv/GammaConv.h"
+#include "VertexFit/BField.h"
+
+#include <vector>
+
+typedef std::vector<double> Vdouble;
+
+const double alpha = -0.00299792458;
+
+GammaConv::GammaConv(WTrackParameter wvposiTrk, WTrackParameter wvelecTrk, HepPoint3D ip){
+
+  DeltaXY(wvposiTrk, wvelecTrk);
+
+  DeltaZ(wvposiTrk, wvelecTrk);
+
+  GGeom(ip);
+
+  DGamma(wvposiTrk, wvelecTrk, ip);
+  anglez(wvposiTrk, wvelecTrk);
+  Deltaphitheta(wvposiTrk, wvelecTrk)
+
+}
+
+GammaConv::~GammaConv(){
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+
+void GammaConv::DeltaXY(WTrackParameter wvposiTrk, WTrackParameter wvelecTrk){
+
+  HTrackParameter htrkp(wvposiTrk);
+  HTrackParameter htrke(wvelecTrk);
+
+  double rp = fabs(htrkp.radius());
+  double re = fabs(htrke.radius());
+
+  double xp, yp, xe, ye;
+  xp = htrkp.center().x();
+  yp = htrkp.center().y();
+  xe = htrke.center().x();
+  ye = htrke.center().y();
+  double xa, ya, xb, yb;
+  double lep;
+  lep = sqrt((xp-xe)*(xp-xe)+(yp-ye)*(yp-ye));
+  xa = xe+(xp-xe)*re/lep;
+  ya = ye+(yp-ye)*re/lep;
+  xb = xp-(xp-xe)*rp/lep;
+  yb = yp-(yp-ye)*rp/lep;
+  _coordie.setX(xa);
+  _coordie.setY(ya);
+  _coordip.setX(xb);
+  _coordip.setY(yb);
+  double len;
+  len = sqrt((xa-xb)*(xa-xb)+(ya-yb)*(ya-yb));
+  if(lep >= rp+re) m_deltaxy = len;
+  else m_deltaxy = -len;
+}
+
+void GammaConv::DeltaZ(WTrackParameter wvposiTrk, WTrackParameter wvelecTrk){
+  HTrackParameter htrkp(wvposiTrk);
+  HTrackParameter htrke(wvelecTrk);
+
+  HepPoint3D posp = htrkp.x3();
+  HepPoint3D pose = htrkp.x3();
+  double radp = htrkp.radius();
+  double rade = htrke.radius();
+
+  double jp;
+  Hep3Vector pp = htrkp.p3();
+  double bFieldp = VertexFitBField::instance()->getBFieldZ(posp);
+  int    chargep = wvposiTrk.charge();
+  double aconp = alpha * bFieldp * chargep; 
+
+  jp = aconp*((_coordip.x()-posp.x())*pp.x()+(_coordip.y()-posp.y())*pp.y())/(pp.x()*pp.x()+pp.y()*pp.y());
+  double zp;
+  zp = htrkp.dz()+pp.z()*asin(jp)/aconp;
+
+  double je;
+  Hep3Vector pe = htrke.p3();
+  double bFielde = VertexFitBField::instance()->getBFieldZ(pose);
+  int    chargee = wvelecTrk.charge();
+  double acone = alpha * bFielde * chargee;
+
+  je = acone*((_coordie.x()-pose.x())*pe.x()+(_coordie.y()-pose.y())*pe.y())/(pe.x()*pe.x()+pe.y()*pe.y());
+  double ze;
+  ze = htrke.dz()+pe.z()*asin(je)/acone;
+
+  _coordip.setZ(zp);
+  _coordie.setZ(ze);
+  m_deltaz = fabs(zp-ze);
+}
+void GammaConv::DGamma(WTrackParameter wvposiTrk, WTrackParameter wvelecTrk, HepPoint3D ip){
+
+  HepLorentzVector pgamma(wvposiTrk.p()+wvelecTrk.p());
+  double p = pgamma.vect().mag();
+  double dipa;
+  dipa = (ip.x()-m_rx)*pgamma.px()/p+(ip.y()-m_ry)*pgamma.py()/p+(ip.z()-m_rz)*pgamma.pz()/p;
+  double dgp;
+  dgp = sqrt((ip.x()-m_rx)*(ip.x()-m_rx)+(ip.y()-m_ry)*(ip.y()-m_ry)+(ip.z()-m_rz)*(ip.z()-m_rz));
+  m_dgamma = sqrt(dgp*dgp-dipa*dipa);
+  m_R = dgp;
+  m_cthe = acos(dipa/dgp);
+}
+
+void GammaConv::GGeom(HepPoint3D ip){
+  double x, y, zz;
+  HepPoint3D OA, OB, OM;
+  OA = _coordip-ip;
+  OB = _coordie-ip;
+  OM = (OA+OB)*0.5;
+  m_rx = OM.x();
+  m_ry = OM.y();
+  m_rz = OM.z();
+  m_rxy= sqrt(OM.x()*OM.x()+OM.y()*OM.y());
+  m_xv = OM;
+}
+
+void GammaConv::GetCoordi(HepPoint3D &coordip, HepPoint3D &coordie){
+  coordip = _coordip;
+  coordie = _coordie;
+}
+
+void GammaConv::anglez(WTrackParameter wvposiTrk, WTrackParameter wvelecTrk){
+  Hep3Vector pp = wvposiTrk.p().vect();
+  Hep3Vector pe = wvelecTrk.p().vect();
+  Hep3Vector p = cross(pp, pe);
+  double angle = p.z()/p.mag();
+  m_anglez  = acos(angle);
+  
+}
+Hep3Vector GammaConv::cross(Hep3Vector h1, Hep3Vector h2){
+  Hep3Vector ret(0.,0.,0.);
+  ret[0]=h1.y()*h2.z()-h1.z()*h2.y();
+  ret[1]=-h1.x()*h2.z()+h1.z()*h2.x();
+  ret[2]=h1.x()*h2.y()-h1.y()*h2.x();
+  return ret;
+}
+void GammaConv::Deltaphitheta(WTrackParameter wvposiTrk, WTrackParameter wvelecTrk){
+  HTrackParameter htrkp(wvposiTrk);
+  HTrackParameter htrke(wvelecTrk);
+  HepVector helixp = htrkp.helix();
+  HepVector helixe = htrke.helix();
+  double deltaphi0 = acos(-sin(helixe[1]))-acos(-sin(helixp[1]));
+  m_deltaphi0 = deltaphi0;
+  double deltatheta0 = acos(helixe[4]/sqrt(1+helixe[4]*helixe[4]))-acos(helixp[4]/sqrt(1+helixp[4]*helixp[4]));
+  m_deltatheta0 = deltatheta0;
+}
+
+HepVector GammaConv::swimVertex(WTrackParameter wvTrk, HepVector xv){
+// Track parameter can be expressed as:
+//
+// px = px0 + a*(y0 - yv)
+// py = py0 - a*(x0 - xv)
+// pz = pz0
+// e = e
+// x = xv
+// y = yv
+// z = zv
+//
+// thus p = A * a + B * vx
+// x = vx 
+  HepMatrix A(7, 7, 0);
+  HepMatrix B(7, 3, 0);
+  HepVector w(7, 0);
+  double bField = VertexFitBField::instance()->getCBz(xv,wvTrk.X());
+  int    charge = wvTrk.charge()>0? 1:-1;
+  double a = alpha * bField * charge;
+  A[0][0] = 1.0;
+  A[0][5] = a;
+  A[1][1] = 1.0;
+  A[1][4] = -a;
+  A[2][2] = 1.0;
+  A[3][3] = 1.0;
+  B[0][1] = -a;
+  B[1][0] = a;
+  B[4][0] = 1;
+  B[5][1] = 1;
+  B[6][2] = 1; 
+  w = A * wvTrk.w() + B * xv;
+  return w;
+}

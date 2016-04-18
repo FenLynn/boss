@@ -1,0 +1,4 @@
+#include "$VERTEXFITROOT/share/jobOptions_VertexDbSvc.txt"
+ApplicationMgr.DLLs += {"XisP3PiAlg"};
+ApplicationMgr.TopAlg += { "XisP3Pi" };
+

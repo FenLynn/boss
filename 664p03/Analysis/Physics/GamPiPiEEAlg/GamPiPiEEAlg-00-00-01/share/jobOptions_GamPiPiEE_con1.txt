@@ -1,0 +1,5 @@
+#include "$VERTEXFITROOT/share/jobOptions_VertexDbSvc.txt"
+ApplicationMgr.DLLs += {"GamPiPiEEAlg"};
+ApplicationMgr.TopAlg += { "GamPiPiEE" };
+
+GamPiPiEE.Ecms = 3.08;

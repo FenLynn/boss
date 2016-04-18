@@ -1,0 +1,74 @@
+#ifndef Physics_Analysis_GammaConv_H
+#define Physics_Analysis_GammaConv_H
+
+#include "VertexFit/HTrackParameter.h"
+#include "VertexFit/WTrackParameter.h"
+#include "CLHEP/Matrix/Vector.h"
+using CLHEP::HepVector;
+#ifndef CLHEP_THREEVECTOR_H
+#include "CLHEP/Vector/ThreeVector.h"
+using CLHEP::Hep3Vector;
+#endif
+#include "CLHEP/Vector/LorentzVector.h"
+using CLHEP::HepLorentzVector;
+#ifndef CLHEP_POINT3D_H
+#include "CLHEP/Geometry/Point3D.h"
+#ifndef ENABLE_BACKWARDS_COMPATIBILITY
+   typedef HepGeom::Point3D<double> HepPoint3D;
+#endif
+#endif
+
+class GammaConv
+{
+
+public:
+
+  GammaConv(WTrackParameter wvposiTrk, WTrackParameter wvelecTrk, HepPoint3D ip);
+  ~GammaConv();
+
+public:
+  //get the four parameters
+  double getDeltaXY() {return m_deltaxy;}
+  double getDeltaZ()  {return m_deltaz;}
+  double getDGamma()  {return m_dgamma;}
+  double getRX() {return m_rx;}
+  double getRY() {return m_ry;}
+  double getRZ() {return m_rz;}
+  double getRXY(){return m_rxy;}
+  double getR()  {return m_R;}
+  double getCthe() {return m_cthe;}
+  void GetCoordi(HepPoint3D &coordip, HepPoint3D &coordie);
+  HepPoint3D getXv() {return m_xv;}
+  double getAnglez() {return m_anglez;}
+  double getDeltaphi() {return m_deltaphi;}
+  double getDeltatheta() {return m_deltatheta;}
+  double getDeltaphi0() {return m_deltaphi0;}
+  double getDeltatheta0() {return m_deltatheta0;}
+private:
+  void DeltaXY(WTrackParameter wvposiTrk, WTrackParameter wvelecTrk);
+  void DeltaZ(WTrackParameter wvposiTrk, WTrackParameter wvelecTrk);
+  void DGamma(WTrackParameter wvposiTrk, WTrackParameter wvelecTrk, HepPoint3D ip);
+  void GGeom(HepPoint3D ip);
+  Hep3Vector cross(Hep3Vector h1, Hep3Vector h2);
+  void anglez(WTrackParameter wvposiTrk, WTrackParameter wvelecTrk);
+  HepVector swimVertex(WTrackParameter wvTrk, HepVector xv);
+  void Deltaphitheta(WTrackParameter wvposiTrk, WTrackParameter wvelecTrk);
+private:
+  double m_deltaxy;
+  double m_deltaz;
+  double m_dgamma;
+  double m_rx;
+  double m_ry;
+  double m_rz;
+  double m_rxy;
+  double m_R;
+  double m_cthe; 
+  double m_anglez; 
+  HepPoint3D _coordip, _coordie;
+  HepPoint3D m_xv;
+  double m_deltaphi;
+  double m_deltatheta;
+  double m_deltaphi0;
+  double m_deltatheta0;
+};
+#endif
