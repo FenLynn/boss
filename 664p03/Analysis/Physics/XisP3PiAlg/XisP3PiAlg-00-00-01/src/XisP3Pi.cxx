@@ -879,6 +879,7 @@ for(int i1=0;i1<2;i1++){
 	nVtxok++;
 }
 if(nVtxok==0) return StatusCode::SUCCESS;
+Ncut5++;		//after vertex fit
 //end vertex fit
 
 TreeAna->Fill();
@@ -908,11 +909,11 @@ StatusCode XisP3Pi::finalize() {
 	saveFile->Close();
 	cout<<endl<<"Finalize psi'-> Xi*-(p+ pi- pi-) + Xi_bar +"<<endl<<endl;;
 	cout<<"Total number:                         "<<Ncut0<<endl;
-	cout<<"nGood<=12,nPos>=1,nNeg>=2:                 "<<Ncut1<<endl;
+	cout<<"nGood<=12,nPos>=1,nNeg>=2:            "<<Ncut1<<endl;
 	cout<<"nGamma>=2&&nGamma<=15:                "<<Ncut2<<endl;
-	cout<<"PID :                                 "<<Ncut3<<endl;
-	cout<<"vertex fit:                           "<<Ncut4<<endl;
-	cout<<"4C success:                           "<<Ncut5<<endl;
+	cout<<"1C:		                             "<<Ncut3<<endl;
+	cout<<"PID:		                             "<<Ncut4<<endl;
+	cout<<"vertex fit:                           "<<Ncut5<<endl;
 	cout<<"_ENDTAG_"<<endl;
 	MsgStream log(msgSvc(), name());
 	log << MSG::INFO << "in finalize()" << endmsg;
