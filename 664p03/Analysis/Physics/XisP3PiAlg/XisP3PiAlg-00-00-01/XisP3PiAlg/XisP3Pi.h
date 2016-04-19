@@ -84,17 +84,21 @@ class XisP3Pi:public Algorithm{
 		int m_motheridx[500];
 		int m_motherpid[500];
 		//MC Truth
-		TLorentzVector *xep;
-		TLorentzVector *xem;
-		TLorentzVector *xgamma1;
-		TLorentzVector *xgamma2;
-		TLorentzVector *xgg;
-		TLorentzVector *xee;
-		TLorentzVector *xeta;
-		double xmee;
-		double xmgg;
-		int flagP;
 		int issig;
+		TLorentzVector *xp_xis;
+		TLorentzVector *xp_xi;
+		TLorentzVector *xp_xipim;
+		TLorentzVector *xp_lam;
+		TLorentzVector *xp_lampim;
+		TLorentzVector *xp_prop;
+		TLorentzVector *xp_pi0;
+		TLorentzVector *xp_gamma1;
+		TLorentzVector *xp_gamma2;
+		TLorentzVector *xp_xibar;
+		TLorentzVector *xp_lambar;
+		TLorentzVector *xp_xibarpip;
+		TLorentzVector *xp_prom;
+		TLorentzVector *xp_lambarpip;
 
 		int runid;
 		int evtid;
@@ -110,6 +114,7 @@ class XisP3Pi:public Algorithm{
 		double TDCtime[500];
 		double isoAngle[500];
 		double showerde;
+		int nGamma;
 
 		//track  info		
 		double vx[3],Evx[3];
@@ -126,85 +131,46 @@ class XisP3Pi:public Algorithm{
 		double eop[2];
 
 		//pid info.
-		int flag_ep;
-		int flag_em;
-		double prob[2][3];
+		int flag_prop;
+		int flag_pim[2];
 
-		//for vertex fit
-		double vtxchisq;	
 
-		//for 4C-fit
-		double chi4C;
-		TLorentzVector *p_ep;			//after fit
-		TLorentzVector *p_em; 
+		//for 1C-fit
+		double chi1C;
+		int idx_gamma1;
+		int idx_gamma2;
 		TLorentzVector *p_gamma1;		
 		TLorentzVector *p_gamma2;		
-		TLorentzVector *p_ee; 
-		TLorentzVector *p_gg; 
+		TLorentzVector *p_pi0; 
 	
-		TLorentzVector *p_uep;			//no fit
-		TLorentzVector *p_uem; 
-		TLorentzVector *p_ugamma1;		
-		TLorentzVector *p_ugamma2;		
-		TLorentzVector *p_uee; 
-		TLorentzVector *p_ugg; 
+		//for vertex fit
+		int nVtxok;
+		int flag_vtx;
+		double chi_vtxLam[100];
+		double chi_vtxXi[100];
+		double chi_svtxXi[100];
+		double chi_vtx[100];
+		double m_lambda[100];
+		double m_xi[100];
+		double m_xis[100];
+		double m_xibar[100];
+		double m_ctau[100];
+		double m_len[100];
+		double m_lenerr[100];
+		double flag_lampim[100];
+		double flag_xipim[100];
 		
-		TLorentzVector *p_gamma1b;		
-		TLorentzVector *p_gamma2b; 
-		double angee;
-		double mee;
-		double mgg;
-		double cosgam1b;
-		double cosgam2b;
-		double cosgamb;
+		TClonesArray *p_prop;
+		TClonesArray *p_lampim;
+		TClonesArray *p_xipim;
+		TClonesArray *p_lambda;
+		TClonesArray *p_xi;
+		TClonesArray *p_xis;
+		TClonesArray *p_xibar;
 
-		Double_t em_pull_0;
-		Double_t em_pull_1;
-		Double_t em_pull_2;
-		Double_t em_pull_3;
-		Double_t em_pull_4;
-		Double_t ep_pull_0;
-		Double_t ep_pull_1;
-		Double_t ep_pull_2;
-		Double_t ep_pull_3;
-		Double_t ep_pull_4;
 
-		Double_t m_rconv;
-		Double_t m_xconv1;
-		Double_t m_yconv1;
-		Double_t m_zconv1;
-		Double_t m_rconv1;
-		Double_t m_xconv2;
-		Double_t m_yconv2;
-		Double_t m_zconv2;
-		Double_t m_rconv2;
-		Double_t m_xiep;
-		Double_t m_deltaxy;
 
-		Double_t m_deltaz1;
-		Double_t m_deltaz2;
 
-		Double_t m_lep;
-		Double_t m_psipair;
-		//                Double_t m_dgamma;
-		Double_t MEE;
-		Double_t m_vx_x;
-		Double_t m_vx_y;
-		Double_t m_vx_r;
-		Double_t m_thetaeg1;
-		Double_t m_thetaeg2;
-		Double_t m_cthep;
-		Double_t m_ptrkp;
-		Double_t m_ptrkm;
-		Double_t m_mgamma;
-		Double_t m_egamma;
-		Double_t m_theta;
-		Double_t m_cosTheta;
-		Double_t m_phi;
-		Double_t m_rp;
-		Double_t m_re;
-		Double_t m_deltaeq;
-		Double_t m_case;
 
 };
 
