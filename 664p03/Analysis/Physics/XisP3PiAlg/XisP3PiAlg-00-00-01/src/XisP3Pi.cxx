@@ -64,7 +64,6 @@ typedef HepGeom::Point3D<double> HepPoint3D;
 #include "TRandom.h"
 #include "TRandom3.h"
 
-#include "GammaConv/GammaConv.h"
 
 //const double twopi = 6.2831853;
 //const double pi = 3.1415927;
@@ -132,6 +131,7 @@ StatusCode XisP3Pi::initialize(){
 	MsgStream log(msgSvc(), name());
 	std::cout<<"initialize has started!"<<std::endl;
 	log << MSG::INFO << "in initialize()" << endmsg;
+//	cout << "in initialize" << endl;
 	StatusCode status;
 
 	//Output name
@@ -203,20 +203,21 @@ StatusCode XisP3Pi::initialize(){
 
 	TreeAna->Branch("vx", vx, "vx[3]/D");
 	TreeAna->Branch("Evx", Evx, "Evx[3]/D");
-	TreeAna->Branch("costheta_chrgd", costheta_chrgd, "costheta_chrgd[2]/D");
-	TreeAna->Branch("Rxy", Rxy, "Rxy[2]/D");
-	TreeAna->Branch("Rz", Rz, "Rz[2]/D");
-	TreeAna->Branch("Rvxy", Rvxy, "Rvxy[2]/D");
-	TreeAna->Branch("Rvz", Rvz, "Rvz[2]/D");
-	TreeAna->Branch("pKal", pKal, "pKal[2]/D");
-	TreeAna->Branch("pxKal", pxKal, "pxKal[2]/D");
-	TreeAna->Branch("pyKal", pyKal, "pyKal[2]/D");
-	TreeAna->Branch("pzKal", pzKal, "pzKal[2]/D");
-	TreeAna->Branch("deemc", deemc, "deemc[2]/D");
-	TreeAna->Branch("eop", eop, "eop[2]/D");
+	TreeAna->Branch("nGood", &nGood, "nGood/I");
+	TreeAna->Branch("costheta_chrgd", costheta_chrgd, "costheta_chrgd[nGood]/D");
+	TreeAna->Branch("Rxy", Rxy, "Rxy[nGood]/D");
+	TreeAna->Branch("Rz", Rz, "Rz[nGood]/D");
+	TreeAna->Branch("Rvxy", Rvxy, "Rvxy[nGood]/D");
+	TreeAna->Branch("Rvz", Rvz, "Rvz[nGood]/D");
+	TreeAna->Branch("pKal", pKal, "pKal[nGood]/D");
+	TreeAna->Branch("pxKal", pxKal, "pxKal[nGood]/D");
+	TreeAna->Branch("pyKal", pyKal, "pyKal[nGood]/D");
+	TreeAna->Branch("pzKal", pzKal, "pzKal[nGood]/D");
+	TreeAna->Branch("deemc", deemc, "deemc[nGood]/D");
+	TreeAna->Branch("eop", eop, "eop[nGood]/D");
 
-	TreeAna->Branch("flag_pim", flag_pim, "flag_pim[2]/D");
-	TreeAna->Branch("flag_prop", &flag_prop, "flag_prop/D");
+	TreeAna->Branch("flag_pim", flag_pim, "flag_pim[2]/I");
+	TreeAna->Branch("flag_prop", &flag_prop, "flag_prop/I");
 
 	TreeAna->Branch("p_pi0",&p_pi0,32000,0);
 	TreeAna->Branch("p_gamma1",&p_gamma1,32000,0);
@@ -286,6 +287,7 @@ StatusCode XisP3Pi::execute() {
 	//std::cout << "execute()" << std::endl;
 	MsgStream log(msgSvc(), name());
 	log << MSG::INFO << "in execute()" << endreq;
+//	cout << "in execute" << endl;
 
 	SmartDataPtr<Event::EventHeader> eventHeader(eventSvc(),"/Event/EventHeader");
 	int runNo=eventHeader->runNumber();
@@ -295,7 +297,7 @@ StatusCode XisP3Pi::execute() {
 
 	Ncut0++;  //total events
 	log << MSG::DEBUG <<"run, evtnum = "<< runNo << " , "<< event <<endreq;
-	//	cout <<"run, evtnum = "<< runNo << " , "<< event <<endl;
+	cout <<"run, evtnum = "<< runNo << " , "<< event <<endl;
 
 	if(!(Ncut0%10000))
 	{
@@ -478,7 +480,7 @@ if((xep->E()>0)&&(xem->E()>0)&&(xgamma1->E()>0)&&(xgamma2->E()>0)&&(xeta->E()>0)
 Vint iGood, iGamma;
 Vint iTrp,iTrm,iprop,iprom,ipip,ipim,iem;
 iGood.clear();
-int nGood = 0;
+nGood = 0;
 int nCharge = 0;
 nGamma = 0;
 
@@ -615,7 +617,6 @@ log << MSG::DEBUG << "num Good Photon " << nGamma  << " , " <<evtRecEvent->total
 
 if(nGamma < m_NGamma || nGamma >15) return StatusCode::SUCCESS; 
 Ncut2++;	//after good gamma cut
-
 /////////////////////////////////assign 4-momentum for photons
 TLorentzVector p_JpsiGamma;
 Vp4 pGamma;
@@ -676,8 +677,16 @@ if (chi1C==-99)  return StatusCode::SUCCESS;
 Ncut3++;		//after 1C
 
 ////////////////////////////////PID
-flag_prop=-1;flag_pim[0]=-1;flag_pim[1]=-1;
+flag_prop=-1;
+flag_pim[0]=-1;
+flag_pim[1]=-1;
+
+int pid_prop=-1;
+int pid_pim1=-1;
+int pid_pim2=-1;
+
 int Npid_prop(0),Npid_pim(0);
+
 ParticleID *pid = ParticleID::instance();
 
 for(int i = 0; i < nGood; i++) {
@@ -696,7 +705,11 @@ for(int i = 0; i < nGood; i++) {
 	double prob_pro = pid->probProton();
 	if(!(pid->IsPidInfoValid())) continue;
 	if(_charge==1){
-		if((prob_pro>prob_pi)&&(prob_pro>prob_K)) {flag_prop=i;Npid_prop++;}
+		if((prob_pro>prob_pi)&&(prob_pro>prob_K)) {
+			flag_prop=i;
+		//	pid_prop=i;
+			Npid_prop++;
+		}
 	}
 	else if(_charge==-1){
 		if((prob_pi>prob_pro)&&(prob_pi>prob_K)) {
@@ -711,10 +724,16 @@ if((Npid_prop !=1)||(Npid_pim != 2))  return StatusCode::SUCCESS;
 Ncut4++;		//after pid
 
 //////////////////// Assign track  info
+RecMdcKalTrack *mdcTrk_pim[2],*mdcTrk_prop;
+int idx_trk=0;
 for(int i = 0; i < nGood; i++) {
 	EvtRecTrackIterator itTrk = evtRecTrkCol->begin() + iGood[i];
 	RecMdcKalTrack* mdcKalTrk = (*itTrk)->mdcKalTrack();
 	RecMdcTrack* mdcTrk = (*itTrk)->mdcTrack();
+//if(i==flag_prop) {	mdcTrk_prop = (*(evtRecTrkCol->begin()+iGood[i]))->mdcKalTrack();cout<<"prop"<<endl;}
+//if(i==flag_pim[0])  {mdcTrk_pim[0] = (*(evtRecTrkCol->begin()+iGood[i]))->mdcKalTrack();cout<<"pim0"<<endl;}
+//if(i==flag_pim[1])  {mdcTrk_pim[1] = (*(evtRecTrkCol->begin()+iGood[i]))->mdcKalTrack();cout<<"pim1"<<endl;}
+
 
 	HepVector ia = mdcTrk->helix();
 	HepSymMatrix iEa = mdcTrk->err();
@@ -746,16 +765,14 @@ for(int i = 0; i < nGood; i++) {
 	}
 }
 
+
 WTrackParameter wvpropTrk, wvpimTrk[2];
-RecMdcKalTrack *mdcTrk_pim[2];
 HepLorentzVector hvun_pim[2];
 
 RecMdcKalTrack::setPidType(RecMdcKalTrack::proton);
-RecMdcKalTrack *mdcTrk_prop = (*(evtRecTrkCol->begin()+iGood[flag_prop]))->mdcKalTrack();
+mdcTrk_prop = (*(evtRecTrkCol->begin()+iGood[flag_prop]))->mdcKalTrack();
 HepLorentzVector hvun_prop = mdcTrk_prop->p4(mp);
 wvpropTrk = WTrackParameter(mp, mdcTrk_prop->getZHelixP(), mdcTrk_prop->getZErrorP());  
-
-//	pu_prop->SetPxPyPzE(prop_un.px(), prop_un.py(), prop_un.pz(), prop_un.e());
 
 RecMdcKalTrack::setPidType(RecMdcKalTrack::pion);
 mdcTrk_pim[0] = (*(evtRecTrkCol->begin()+iGood[flag_pim[0]]))->mdcKalTrack();
@@ -767,8 +784,10 @@ wvpimTrk[1] = WTrackParameter(mpi, mdcTrk_pim[1]->getZHelix(), mdcTrk_pim[1]->ge
 hvun_pim[0] = mdcTrk_pim[0]->p4(mpi);
 hvun_pim[1] = mdcTrk_pim[1]->p4(mpi);
 
+//	pu_prop->SetPxPyPzE(prop_un.px(), prop_un.py(), prop_un.pz(), prop_un.e());
 //	pu_pim1->SetPxPyPzE(hvun_pim[0].px(), hvun_pim[0].py(), hvun_pim[0].pz(), hvun_pim[0].e());
 //	pu_pim2->SetPxPyPzE(hvun_pim[1].px(), hvun_pim[1].py(), hvun_pim[1].pz(), hvun_pim[1].e());
+
 
 /////////////////////////////////////vertex fit
 HepPoint3D vx(0., 0., 0.);
@@ -883,6 +902,7 @@ Ncut5++;		//after vertex fit
 //end vertex fit
 
 TreeAna->Fill();
+
 GammaAll->Clear();
 p_prop->Clear();
 p_lampim->Clear();

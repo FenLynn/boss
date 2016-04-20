@@ -118,17 +118,18 @@ class XisP3Pi:public Algorithm{
 
 		//track  info		
 		double vx[3],Evx[3];
-		double costheta_chrgd[2];
-		double Rxy[2];
-		double Rz[2];
-		double Rvxy[2];
-		double Rvz[2];
-		double pKal[2];
-		double pxKal[2];
-		double pyKal[2];
-		double pzKal[2];
-		double deemc[2];
-		double eop[2];
+		int nGood;
+		double costheta_chrgd[100];
+		double Rxy[100];
+		double Rz[100];
+		double Rvxy[100];
+		double Rvz[100];
+		double pKal[100];
+		double pxKal[100];
+		double pyKal[100];
+		double pzKal[100];
+		double deemc[100];
+		double eop[100];
 
 		//pid info.
 		int flag_prop;
