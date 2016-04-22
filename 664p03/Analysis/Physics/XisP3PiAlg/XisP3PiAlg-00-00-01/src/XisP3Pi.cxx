@@ -298,7 +298,7 @@ StatusCode XisP3Pi::execute() {
 
 	Ncut0++;  //total events
 	log << MSG::DEBUG <<"run, evtnum = "<< runNo << " , "<< event <<endreq;
-	cout <<"run, evtnum = "<< runNo << " , "<< event <<endl;
+//	cout <<"run, evtnum = "<< runNo << " , "<< event <<endl;
 
 	if(!(Ncut0%10000))
 	{
