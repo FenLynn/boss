@@ -117,6 +117,7 @@ XisP3Pi::XisP3Pi(const std::string& name, ISvcLocator* pSvcLocator) :
 		declareProperty("TDC_min", TDC_min=0.);
 		declareProperty("TDC_max", TDC_max=14.);
 		declareProperty("GammaAngleCut", m_gammaAngleCut=10.0);
+		declareProperty("GammaPmAngleCut", m_gammapmAngleCut=30.0);
 		declareProperty("BarrelEnergyThreshold", m_barrelEnergyThreshold=0.025);
 		declareProperty("EndEnergyThreshold",m_endEnergyThreshold=0.050);
 		declareProperty("barcut",barcut=0.8);
@@ -200,6 +201,7 @@ StatusCode XisP3Pi::initialize(){
 	TreeAna->Branch("energy_gamma", energy_gamma, "energy_gamma[nGamma]/D");
 	TreeAna->Branch("TDCtime", TDCtime , "TDCtime[nGamma]/D");
 	TreeAna->Branch("isoAngle", isoAngle, "isoAngle[nGamma]/D");
+	TreeAna->Branch("isoPmAngle", isoPmAngle, "isoPmAngle[nGamma]/D");
 	TreeAna->Branch("showerde", &showerde, "showerde/D");
 
 	TreeAna->Branch("vx", vx, "vx[3]/D");
@@ -219,6 +221,7 @@ StatusCode XisP3Pi::initialize(){
 
 	TreeAna->Branch("flag_pim", flag_pim, "flag_pim[2]/I");
 	TreeAna->Branch("flag_prop", &flag_prop, "flag_prop/I");
+	TreeAna->Branch("flag_prom", &flag_prom, "flag_prom/I");
 
 	TreeAna->Branch("p_pi0",&p_pi0,32000,0);
 	TreeAna->Branch("p_gamma1",&p_gamma1,32000,0);
@@ -476,9 +479,58 @@ StatusCode XisP3Pi::execute() {
 	nTrm=iTrm.size();
 	log << MSG::DEBUG << "ngood, totcharge = " << nGood << " , " << nCharge << endreq;
 	if(nGood >12) return StatusCode::SUCCESS;
-	if(nTrp<1||nTrm<2)  return StatusCode::SUCCESS;
+	if(nTrp<1||nTrm<3)  return StatusCode::SUCCESS;
 	Ncut1++;		//after good track selection
+	
+	////////////////////////////////PID
+	flag_prop=-1;
+	flag_prom=-1;
+	flag_pim[0]=-1;
+	flag_pim[1]=-1;
 
+	int Npid_prop(0),Npid_pim(0),Npid_prom(0);
+
+	ParticleID *pid = ParticleID::instance();
+
+	for(int i = 0; i < nGood; i++) {
+		EvtRecTrackIterator itTrk = evtRecTrkCol->begin() + iGood[i];
+		RecMdcKalTrack* mdcKalTrk = (*itTrk)->mdcKalTrack();
+		int _charge = mdcKalTrk->charge();
+		pid->init();
+		pid->setMethod(pid->methodProbability());
+		pid->setChiMinCut(4);
+		pid->setRecTrack(*itTrk);
+		pid->usePidSys(pid->useDedx() | pid->useTof1() | pid->useTof2()| pid->useTofE()); // use PID sub-system
+		pid->identify(pid->onlyProton() | pid->onlyPion() | pid->onlyKaon() );    // seperater Pion/Kaon/Electron
+		pid->calculate();
+		double	prob_pi = pid->probPion();
+		double prob_K = pid->probKaon();
+		double prob_pro = pid->probProton();
+		if(!(pid->IsPidInfoValid())) continue;
+		if(_charge==1){
+		//	if((prob_pro>prob_pi)&&(prob_pro>prob_K)) {
+			if(prob_pro>prob_pi) {
+				flag_prop=i;
+				Npid_prop++;
+			}
+		}
+		else if(_charge==-1){
+		//	if((prob_pi>prob_pro)&&(prob_pi>prob_K)) {
+			if(prob_pi>prob_pro) {
+				if(Npid_pim==0) flag_pim[0]=i;		// for track, use ->beign()+iGood[i];
+				else flag_pim[1]=i;
+				Npid_pim++;
+			}
+			else if(prob_pro>prob_pi){
+				flag_prom=i;
+				Npid_prom++;
+			}
+		}
+		else continue;
+	}
+	if((Npid_prop !=1)||(Npid_pim != 2)||(Npid_prom != 1))  return StatusCode::SUCCESS;
+	Ncut2++;		//after pid
+	
 	//////////////////////////////////////good photon select
 	showerde=0.;
 	int idx_gamma=0;
@@ -522,11 +574,23 @@ StatusCode XisP3Pi::execute() {
 		if(dang>=200) continue;
 		dang = dang * 180 / (CLHEP::pi);
 		if(fabs(dang) < m_gammaAngleCut) continue;
+
+		EvtRecTrackIterator ktTrk = evtRecTrkCol->begin() + iGood[flag_prom];
+		if(!(*ktTrk)->isExtTrackValid()) {cout<<"anti-proton track invalid!"<<endl;return StatusCode::SUCCESS;}
+		RecExtTrack *extTrk_pm = (*ktTrk)->extTrack();
+		if(extTrk_pm->emcVolumeNumber() == -1)  {cout<<"anti-proton emc info invalid!"<<endl;return StatusCode::SUCCESS;}
+		Hep3Vector extpos_pm = extTrk_pm->emcPosition();//-xorigin; vertex correction!maybe effect is small
+
+		double ang_gampm = extpos_pm.angle(emcpos);
+		ang_gampm = ang_gampm * 180 / (CLHEP::pi);
+		if(fabs(ang_gampm) < m_gammapmAngleCut) continue;
+		
 		iGamma.push_back(i);
 		costheta_gamma[idx_gamma] = cos(the);
 		energy_gamma[idx_gamma] = eraw;
 		TDCtime[idx_gamma] = time;
 		isoAngle[idx_gamma] = dang;
+		isoPmAngle[idx_gamma] = ang_gampm;
 		idx_gamma++;
 	}
 
@@ -534,7 +598,7 @@ StatusCode XisP3Pi::execute() {
 	log << MSG::DEBUG << "num Good Photon " << nGamma  << " , " <<evtRecEvent->totalNeutral()<<endreq;
 
 	if(nGamma < m_NGamma || nGamma >15) return StatusCode::SUCCESS; 
-	Ncut2++;	//after good gamma cut
+	Ncut3++;	//after good gamma cut
 	/////////////////////////////////assign 4-momentum for photons
 	TLorentzVector p_JpsiGamma;
 	Vp4 pGamma;
@@ -570,7 +634,7 @@ StatusCode XisP3Pi::execute() {
 			HepLorentzVector gamma1_(pGamma[i]);
 			HepLorentzVector gamma2_(pGamma[j]);
 
-			chi1C=((gamma1_+gamma2_).m()-mpi0);
+			chi1C=fabs((gamma1_+gamma2_).m()-mpi0);
 
 			if(chi1C>min_chi1C) continue;
 
@@ -584,55 +648,7 @@ StatusCode XisP3Pi::execute() {
 		}
 	}
 	if (chi1C==-99)  return StatusCode::SUCCESS;
-	Ncut3++;		//after 1C
-
-	////////////////////////////////PID
-	flag_prop=-1;
-	flag_pim[0]=-1;
-	flag_pim[1]=-1;
-
-	int pid_prop=-1;
-	int pid_pim1=-1;
-	int pid_pim2=-1;
-
-	int Npid_prop(0),Npid_pim(0);
-
-	ParticleID *pid = ParticleID::instance();
-
-	for(int i = 0; i < nGood; i++) {
-		EvtRecTrackIterator itTrk = evtRecTrkCol->begin() + iGood[i];
-		RecMdcKalTrack* mdcKalTrk = (*itTrk)->mdcKalTrack();
-		int _charge = mdcKalTrk->charge();
-		pid->init();
-		pid->setMethod(pid->methodProbability());
-		pid->setChiMinCut(4);
-		pid->setRecTrack(*itTrk);
-		pid->usePidSys(pid->useDedx() | pid->useTof1() | pid->useTof2()| pid->useTofE()); // use PID sub-system
-		pid->identify(pid->onlyProton() | pid->onlyPion() | pid->onlyKaon() );    // seperater Pion/Kaon/Electron
-		pid->calculate();
-		double	prob_pi = pid->probPion();
-		double prob_K = pid->probKaon();
-		double prob_pro = pid->probProton();
-		if(!(pid->IsPidInfoValid())) continue;
-		if(_charge==1){
-		//	if((prob_pro>prob_pi)&&(prob_pro>prob_K)) {
-			if(prob_pro>prob_pi) {
-				flag_prop=i;
-				Npid_prop++;
-			}
-		}
-		else if(_charge==-1){
-		//	if((prob_pi>prob_pro)&&(prob_pi>prob_K)) {
-			if(prob_pi>prob_pro) {
-				if(Npid_pim==0) flag_pim[0]=i;		// for track, use ->beign()+iGood[i];
-				else flag_pim[1]=i;
-				Npid_pim++;
-			}
-		}
-		else continue;
-	}
-	if((Npid_prop !=1)||(Npid_pim != 2))  return StatusCode::SUCCESS;
-	Ncut4++;		//after pid
+	Ncut4++;		//after 1C
 
 	//////////////////// Assign track  info
 	RecMdcKalTrack *mdcTrk_pim[2],*mdcTrk_prop;
@@ -732,6 +748,7 @@ StatusCode XisP3Pi::execute() {
 		HepLorentzVector hv_prop = vtxfit1->pfit(0);
 		HepLorentzVector hv_lampim = vtxfit1->pfit(1);         
 		HepLorentzVector hv_lambda= hv_prop+hv_lampim; 
+		m_lambda[nVtxok]=hv_lambda.m();
 		
 		WTrackParameter	wvLambda=vtxfit1->wVirtualTrack(0);
 
@@ -833,10 +850,10 @@ StatusCode XisP3Pi::finalize() {
 	saveFile->Close();
 	cout<<endl<<"Finalize psi'-> Xi*-(p+ pi- pi-) + Xi_bar +"<<endl<<endl;;
 	cout<<"Total number:                         "<<Ncut0<<endl;
-	cout<<"nGood<=12,nPos>=1,nNeg>=2:            "<<Ncut1<<endl;
-	cout<<"nGamma>=2&&nGamma<=15:                "<<Ncut2<<endl;
-	cout<<"1C:		                             "<<Ncut3<<endl;
-	cout<<"PID:		                             "<<Ncut4<<endl;
+	cout<<"nGood<=12,nPos>=1,nNeg>=3:            "<<Ncut1<<endl;
+	cout<<"PID:		                             "<<Ncut2<<endl;
+	cout<<"nGamma>=2&&nGamma<=15:                "<<Ncut3<<endl;
+	cout<<"1C:		                             "<<Ncut4<<endl;
 	cout<<"vertex fit:                           "<<Ncut5<<endl;
 	cout<<"_ENDTAG_"<<endl;
 	MsgStream log(msgSvc(), name());

@@ -68,6 +68,7 @@ class XisP3Pi:public Algorithm{
 		double TDC_min;
 		double TDC_max;
 		double m_gammaAngleCut;
+		double m_gammapmAngleCut;
 		double m_barrelEnergyThreshold;
 		double m_endEnergyThreshold;
 		double barcut;
@@ -113,6 +114,7 @@ class XisP3Pi:public Algorithm{
 		double energy_gamma[500];
 		double TDCtime[500];
 		double isoAngle[500];
+		double isoPmAngle[500];
 		double showerde;
 		int nGamma;
 
@@ -133,6 +135,7 @@ class XisP3Pi:public Algorithm{
 
 		//pid info.
 		int flag_prop;
+		int flag_prom;
 		int flag_pim[2];
 
 
