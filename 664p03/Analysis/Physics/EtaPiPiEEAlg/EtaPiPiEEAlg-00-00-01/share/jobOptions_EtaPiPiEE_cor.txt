@@ -1,0 +1,5 @@
+#include "$VERTEXFITROOT/share/jobOptions_VertexDbSvc.txt"
+ApplicationMgr.DLLs += {"EtaPiPiEEAlg"};
+ApplicationMgr.TopAlg += { "EtaPiPiEE" };
+
+EtaPiPiEE.mc_cor=1;
