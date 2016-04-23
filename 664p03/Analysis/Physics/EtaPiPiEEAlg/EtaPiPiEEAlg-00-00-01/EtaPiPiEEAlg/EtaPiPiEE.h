@@ -89,8 +89,9 @@ class EtaPiPiEE:public Algorithm{
 		TLorentzVector *xem;
 		TLorentzVector *xpip;
 		TLorentzVector *xpim;
-		TLorentzVector *xgamma;
-		TLorentzVector *xgee;
+		TLorentzVector *xgamma1;
+		TLorentzVector *xgamma2;
+		TLorentzVector *xeta;
 		TLorentzVector *xee;
 		TLorentzVector *xetap;
 
@@ -143,29 +144,32 @@ class EtaPiPiEE:public Algorithm{
 		TLorentzVector *p_pim; 
 		TLorentzVector *p_ep; 
 		TLorentzVector *p_em; 
-		TLorentzVector *p_gamma;		
+		TLorentzVector *p_gamma1;		
+		TLorentzVector *p_gamma2;		
 		TLorentzVector *p_pipi; 
 		TLorentzVector *p_ee; 
-		TLorentzVector *p_gee; 
-		TLorentzVector *p_gpipi; 
+		TLorentzVector *p_gg; 
+		TLorentzVector *p_ggpipi; 
 		TLorentzVector *p_recpipi;
 
 		TLorentzVector *p_upip;			//no fit
 		TLorentzVector *p_upim; 
 		TLorentzVector *p_uep; 
 		TLorentzVector *p_uem; 
-		TLorentzVector *p_ugamma;		
+		TLorentzVector *p_ugamma1;		
+		TLorentzVector *p_ugamma2;		
 		TLorentzVector *p_upipi; 
 		TLorentzVector *p_uee; 
-		TLorentzVector *p_ugee; 
-		TLorentzVector *p_ugpipi; 
+		TLorentzVector *p_ugg; 
+		TLorentzVector *p_uggpipi; 
 
-		double m_gee;
-		double m_gpipi;
-		double angee;
+		double m_gg;
+		double m_ggpipi;
 		double m_uee;
 		double m_ee;
 		double m_recpipi;
+
+		double angee;
 		double highe_eop;
 		double lowe_eop;
 

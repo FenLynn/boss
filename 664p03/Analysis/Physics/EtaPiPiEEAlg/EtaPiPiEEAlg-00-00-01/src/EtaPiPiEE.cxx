@@ -118,7 +118,7 @@ EtaPiPiEE::EtaPiPiEE(const std::string& name, ISvcLocator* pSvcLocator) :
 		declareProperty("endmin",endmin=0.86);
 		declareProperty("endmax",endmax=0.92);
 		declareProperty("gamiso",gamiso=1);
-		declareProperty("m_NGamma",m_NGamma=1);
+		declareProperty("m_NGamma",m_NGamma=2);
 		declareProperty("mc_cor",mc_cor=0);
 	}
 
@@ -146,31 +146,34 @@ StatusCode EtaPiPiEE::initialize(){
 	xpim=new TLorentzVector();
 	xem=new TLorentzVector();
 	xep=new TLorentzVector();
-	xgamma=new TLorentzVector();
+	xgamma1=new TLorentzVector();
+	xgamma2=new TLorentzVector();
 	xee=new TLorentzVector();
-	xgee=new TLorentzVector();
 	xetap=new TLorentzVector();
+	xeta=new TLorentzVector();
 
 	p_pip=new TLorentzVector();
 	p_pim=new TLorentzVector();
 	p_em=new TLorentzVector();
 	p_ep=new TLorentzVector();
-	p_gamma=new TLorentzVector();
+	p_gamma1=new TLorentzVector();
+	p_gamma2=new TLorentzVector();
 	p_ee=new TLorentzVector();
 	p_pipi=new TLorentzVector();
-	p_gee=new TLorentzVector();
-	p_gpipi=new TLorentzVector();
+	p_gg=new TLorentzVector();
+	p_ggpipi=new TLorentzVector();
 	p_recpipi=new TLorentzVector();
 
 	p_upip=new TLorentzVector();
 	p_upim=new TLorentzVector();
 	p_uem=new TLorentzVector();
 	p_uep=new TLorentzVector();
-	p_ugamma=new TLorentzVector();
+	p_ugamma1=new TLorentzVector();
+	p_ugamma2=new TLorentzVector();
 	p_uee=new TLorentzVector();
 	p_upipi=new TLorentzVector();
-	p_ugee=new TLorentzVector();
-	p_ugpipi=new TLorentzVector();
+	p_ugg=new TLorentzVector();
+	p_uggpipi=new TLorentzVector();
 
 	//mc info
 	if(m_saveTopo == 1)
@@ -189,8 +192,9 @@ StatusCode EtaPiPiEE::initialize(){
 		TreeAna->Branch("xpim",&xpim,32000,0);
 		TreeAna->Branch("xep",&xep,32000,0);
 		TreeAna->Branch("xem",&xem,32000,0);
-		TreeAna->Branch("xgamma",&xgamma,32000,0);
-		TreeAna->Branch("xgee",&xgee,32000,0);
+		TreeAna->Branch("xgamma1",&xgamma1,32000,0);
+		TreeAna->Branch("xgamma2",&xgamma2,32000,0);
+		TreeAna->Branch("xeta",&xeta,32000,0);
 		TreeAna->Branch("xee",&xee,32000,0);
 		TreeAna->Branch("xetap",&xetap,32000,0);
 	}
@@ -210,7 +214,7 @@ StatusCode EtaPiPiEE::initialize(){
 
 	TreeAna->Branch("vx", vx, "vx[3]/D");
 	TreeAna->Branch("Evx", Evx, "Evx[3]/D");
-	
+
 	TreeAna->Branch("costheta_chrgd", costheta_chrgd, "costheta_chrgd[4]/D");
 	TreeAna->Branch("Rxy", Rxy, "Rxy[4]/D");
 	TreeAna->Branch("Rz", Rz, "Rz[4]/D");
@@ -237,32 +241,34 @@ StatusCode EtaPiPiEE::initialize(){
 	TreeAna->Branch("p_pim",&p_pim,32000,0);
 	TreeAna->Branch("p_ep",&p_ep,32000,0);
 	TreeAna->Branch("p_em",&p_em,32000,0);
-	TreeAna->Branch("p_gamma",&p_gamma,32000,0);
+	TreeAna->Branch("p_gamma1",&p_gamma1,32000,0);
+	TreeAna->Branch("p_gamma2",&p_gamma2,32000,0);
 	TreeAna->Branch("p_ee",&p_ee,32000,0);
 	TreeAna->Branch("p_pipi",&p_pipi,32000,0);
-	TreeAna->Branch("p_gee",&p_gee,32000,0);
-	TreeAna->Branch("p_gpipi",&p_gpipi,32000,0);
+	TreeAna->Branch("p_gg",&p_gg,32000,0);
+	TreeAna->Branch("p_ggpipi",&p_ggpipi,32000,0);
 	TreeAna->Branch("p_recpipi",&p_recpipi,32000,0);
 
 	TreeAna->Branch("p_upip",&p_upip,32000,0);
 	TreeAna->Branch("p_upim",&p_upim,32000,0);
 	TreeAna->Branch("p_uep",&p_uep,32000,0);
 	TreeAna->Branch("p_uem",&p_uem,32000,0);
-	TreeAna->Branch("p_ugamma",&p_ugamma,32000,0);
+	TreeAna->Branch("p_ugamma1",&p_ugamma1,32000,0);
+	TreeAna->Branch("p_ugamma2",&p_ugamma2,32000,0);
 	TreeAna->Branch("p_uee",&p_uee,32000,0);
 	TreeAna->Branch("p_upipi",&p_upipi,32000,0);
-	TreeAna->Branch("p_ugee",&p_ugee,32000,0);
-	TreeAna->Branch("p_ugpipi",&p_ugpipi,32000,0);
+	TreeAna->Branch("p_ugg",&p_ugg,32000,0);
+	TreeAna->Branch("p_uggpipi",&p_uggpipi,32000,0);
 
-	TreeAna->Branch("m_gee", &m_gee, "m_gee/D");
-	TreeAna->Branch("m_gpipi", &m_gpipi, "m_gpipi/D");
-	TreeAna->Branch("angee", &angee, "angee/D");
+	TreeAna->Branch("m_gg", &m_gg, "m_gg/D");
+	TreeAna->Branch("m_ggpipi", &m_ggpipi, "m_ggpipi/D");
 	TreeAna->Branch("m_uee", &m_uee, "m_uee/D");
 	TreeAna->Branch("m_ee", &m_ee, "m_ee/D");
 	TreeAna->Branch("m_recpipi", &m_recpipi, "m_recpipi/D");
+	TreeAna->Branch("angee", &angee, "angee/D");
 	TreeAna->Branch("highe_eop", &highe_eop, "highe_eop/D");
 	TreeAna->Branch("lowe_eop", &lowe_eop, "lowe_eop/D");
-	
+
 	TreeAna->Branch("em_pull_0", &em_pull_0, "em_pull_0/D");
 	TreeAna->Branch("em_pull_1", &em_pull_1, "em_pull_1/D");
 	TreeAna->Branch("em_pull_2", &em_pull_2, "em_pull_2/D");
@@ -325,7 +331,7 @@ StatusCode EtaPiPiEE::initialize(){
 	TreeAna->Branch("m_epemy", &m_epemy, "m_epemy/D");
 	TreeAna->Branch("m_epemz", &m_epemz, "m_epemz/D");
 	TreeAna->Branch("m_epemxy", &m_epemxy, "m_epemxy/D");
-	
+
 	TreeAna->Branch("m_mepr", &m_mepr, "m_mepr/D");
 	TreeAna->Branch("m_mepcenterx", &m_mepcenterx, "m_mepcenterx/D");
 	TreeAna->Branch("m_mepcentery", &m_mepcentery, "m_mepcentery/D");
@@ -334,7 +340,7 @@ StatusCode EtaPiPiEE::initialize(){
 	TreeAna->Branch("m_memcenterx", &m_memcenterx, "m_memcenterx/D");
 	TreeAna->Branch("m_memcentery", &m_memcentery, "m_memcentery/D");
 	TreeAna->Branch("m_memcenterz", &m_memcenterz, "m_memcenterz/D");
-	
+
 	TreeAna->Branch("m_epemxxorigin1e", &m_epemxxorigin1e, "m_epemxxorigin1e/D");
 	TreeAna->Branch("m_epemyxorigin1e", &m_epemyxorigin1e, "m_epemyxorigin1e/D");
 	TreeAna->Branch("m_epemzxorigin1e", &m_epemzxorigin1e, "m_epemzxorigin1e/D");
@@ -479,10 +485,13 @@ StatusCode EtaPiPiEE::execute() {
 			xpim->SetE(-1);
 			xep->SetE(-1);
 			xem->SetE(-1);
-			xgamma->SetE(-1);
+			xgamma1->SetE(-1);
+			xgamma2->SetE(-1);
 			xetap->SetE(-1);
+			xeta->SetE(-1);
 			xee->SetE(-1);
-			int numep(0),numem(0),numpip(0),numpim(0),numgam(0),numetap(0),etapIndex(-1);
+			
+			int numep(0),numem(0),numpip(0),numpim(0),numgam(0),numetap(0),numeta(0),etapIndex(-1),etaIndex(-1);
 
 			if(jpsiIndex > 0){
 				for(iter_mc = mcParticleCol->begin(); iter_mc != mcParticleCol->end(); iter_mc++){
@@ -515,13 +524,28 @@ StatusCode EtaPiPiEE::execute() {
 						xpip->SetPxPyPzE(p.px(), p.py(), p.pz(), p.e());numpip++;}
 					else if(pid == -211){
 						xpim->SetPxPyPzE(p.px(), p.py(), p.pz(), p.e());numpim++;}
-					else if(pid == 22){
-						xgamma->SetPxPyPzE(p.px(), p.py(), p.pz(), p.e());numgam++;}
+					else if(pid == 221){
+						xeta->SetPxPyPzE(p.px(), p.py(), p.pz(), p.e());numeta++;etaIndex = (*iter_mc)->trackIndex();}
+				}
+			}
+			if(etaIndex > 0 ){
+				for(iter_mc = mcParticleCol->begin(); iter_mc != mcParticleCol->end(); iter_mc++){
+					if((*iter_mc)->primaryParticle())continue;
+					if(!(*iter_mc)->decayFromGenerator()) continue;
+					if(((*iter_mc)->mother()).trackIndex() != etaIndex) continue;
+					int pid = (*iter_mc)->particleProperty();
+					if(pid == -22) continue;
+					HepLorentzVector p = (*iter_mc)->initialFourMomentum();
+
+					if(pid == 22){
+						if(numgam==0) {xgamma1->SetPxPyPzE(p.px(), p.py(), p.pz(), p.e());numgam++;}
+						else if(numgam>0) {xgamma2->SetPxPyPzE(p.px(), p.py(), p.pz(), p.e());numgam++;}
+					}
 				}
 			}
 			xee->SetPxPyPzE((*xep+*xem).Px(),(*xep+*xem).Py(),(*xep+*xem).Pz(),(*xep+*xem).E());
 			xmee=xee->M();
-			if((xpip->E()>0)&&(xpim->E()>0)&&(xep->E()>0)&&(xem->E()>0)&&(xgamma->E()>0)&&(xetap->E()>0)&&(numpip==1)&&(numpim==1) &&(numep==1)&&(numem==1)&&(numgam==1)&&(numetap==1)) issig=1;
+			if((xpip->E()>0)&&(xpim->E()>0)&&(xep->E()>0)&&(xem->E()>0)&&(xgamma1->E()>0)&&(xgamma2->E()>0)&&(xeta->E()>0)&&(xetap->E()>0)&&(numpip==1)&&(numpim==1) &&(numep==1)&&(numem==1)&&(numgam==2)&&(numetap==1)&&(numeta==1)) issig=1;
 		}
 	}
 
@@ -841,76 +865,85 @@ StatusCode EtaPiPiEE::execute() {
 	chi4C = 99999.;
 
 	for(int i=0; i < nGamma ; i++){
-		RecEmcShower* gammaTrk = (*(evtRecTrkCol->begin()+iGamma[i]))->emcShower();
-		kmfit->init();
-		kmfit->setEspread(m_EnergySpread);
-		kmfit->setBeamPosition(xorigin);
-		kmfit->setVBeamPosition(Evx_avg);
-		kmfit->AddTrack(0,wepTrk);
-		kmfit->AddTrack(1,wemTrk);
-		kmfit->AddTrack(2,wpipTrk);
-		kmfit->AddTrack(3,wpimTrk);
-		kmfit->AddTrack(4,0.0,gammaTrk);
-		kmfit->AddFourMomentum(0,p4_cms);
+		for(int j=0; j < nGamma ; j++){
+			RecEmcShower* gammaTrki = (*(evtRecTrkCol->begin()+iGamma[i]))->emcShower();
+			RecEmcShower* gammaTrkj = (*(evtRecTrkCol->begin()+iGamma[j]))->emcShower();
+			kmfit->init();
+			kmfit->setEspread(m_EnergySpread);
+			kmfit->setBeamPosition(xorigin);
+			kmfit->setVBeamPosition(Evx_avg);
+			kmfit->AddTrack(0,wepTrk);
+			kmfit->AddTrack(1,wemTrk);
+			kmfit->AddTrack(2,wpipTrk);
+			kmfit->AddTrack(3,wpimTrk);
+			kmfit->AddTrack(4,0.0,gammaTrki);
+			kmfit->AddTrack(5,0.0,gammaTrkj);
+			kmfit->AddFourMomentum(0,p4_cms);
 
-		bool okfit = kmfit->Fit();
-		if(!okfit) continue;
-		if(kmfit->chisq() > chi4C) continue;
-		chi4C=kmfit->chisq();
+			bool okfit = kmfit->Fit();
+			if(!okfit) continue;
+			if(kmfit->chisq() > chi4C) continue;
+			chi4C=kmfit->chisq();
 
-		ep_pull_0 = kmfit->pull(0)[0];
-		ep_pull_1 = kmfit->pull(0)[1];
-		ep_pull_2 = kmfit->pull(0)[2];
-		ep_pull_3 = kmfit->pull(0)[3];
-		ep_pull_4 = kmfit->pull(0)[4];
-		em_pull_0 = kmfit->pull(1)[0];
-		em_pull_1 = kmfit->pull(1)[1];
-		em_pull_2 = kmfit->pull(1)[2];
-		em_pull_3 = kmfit->pull(1)[3];
-		em_pull_4 = kmfit->pull(1)[4];
-		pip_pull_0 = kmfit->pull(2)[0];
-		pip_pull_1 = kmfit->pull(2)[1];
-		pip_pull_2 = kmfit->pull(2)[2];
-		pip_pull_3 = kmfit->pull(2)[3];
-		pip_pull_4 = kmfit->pull(2)[4];
-		pim_pull_0 = kmfit->pull(3)[0];
-		pim_pull_1 = kmfit->pull(3)[1];
-		pim_pull_2 = kmfit->pull(3)[2];
-		pim_pull_3 = kmfit->pull(3)[3];
-		pim_pull_4 = kmfit->pull(3)[4];
+			ep_pull_0 = kmfit->pull(0)[0];
+			ep_pull_1 = kmfit->pull(0)[1];
+			ep_pull_2 = kmfit->pull(0)[2];
+			ep_pull_3 = kmfit->pull(0)[3];
+			ep_pull_4 = kmfit->pull(0)[4];
+			em_pull_0 = kmfit->pull(1)[0];
+			em_pull_1 = kmfit->pull(1)[1];
+			em_pull_2 = kmfit->pull(1)[2];
+			em_pull_3 = kmfit->pull(1)[3];
+			em_pull_4 = kmfit->pull(1)[4];
+			pip_pull_0 = kmfit->pull(2)[0];
+			pip_pull_1 = kmfit->pull(2)[1];
+			pip_pull_2 = kmfit->pull(2)[2];
+			pip_pull_3 = kmfit->pull(2)[3];
+			pip_pull_4 = kmfit->pull(2)[4];
+			pim_pull_0 = kmfit->pull(3)[0];
+			pim_pull_1 = kmfit->pull(3)[1];
+			pim_pull_2 = kmfit->pull(3)[2];
+			pim_pull_3 = kmfit->pull(3)[3];
+			pim_pull_4 = kmfit->pull(3)[4];
 
-		HepLorentzVector ep_ = kmfit->pfit(0);
-		HepLorentzVector em_ = kmfit->pfit(1);
-		HepLorentzVector pip_ = kmfit->pfit(2);
-		HepLorentzVector pim_ = kmfit->pfit(3);
-		HepLorentzVector gamma_ = kmfit->pfit(4);
+			HepLorentzVector ep_ = kmfit->pfit(0);
+			HepLorentzVector em_ = kmfit->pfit(1);
+			HepLorentzVector pip_ = kmfit->pfit(2);
+			HepLorentzVector pim_ = kmfit->pfit(3);
+			HepLorentzVector gamma1_ = kmfit->pfit(4);
+			HepLorentzVector gamma2_ = kmfit->pfit(5);
 
-		p_ep->SetPxPyPzE(ep_.px(), ep_.py(), ep_.pz(), ep_.e());
-		p_em->SetPxPyPzE(em_.px(), em_.py(), em_.pz(), em_.e());
-		p_pip->SetPxPyPzE(pip_.px(), pip_.py(), pip_.pz(), pip_.e());
-		p_pim->SetPxPyPzE(pim_.px(), pim_.py(), pim_.pz(), pim_.e());
-		p_gamma->SetPxPyPzE(gamma_.px(), gamma_.py(), gamma_.pz(), gamma_.e());
+			p_ep->SetPxPyPzE(ep_.px(), ep_.py(), ep_.pz(), ep_.e());
+			p_em->SetPxPyPzE(em_.px(), em_.py(), em_.pz(), em_.e());
+			p_pip->SetPxPyPzE(pip_.px(), pip_.py(), pip_.pz(), pip_.e());
+			p_pim->SetPxPyPzE(pim_.px(), pim_.py(), pim_.pz(), pim_.e());
+			p_gamma1->SetPxPyPzE(gamma1_.px(), gamma1_.py(), gamma1_.pz(), gamma1_.e());
+			p_gamma2->SetPxPyPzE(gamma2_.px(), gamma2_.py(), gamma2_.pz(), gamma2_.e());
 
-		p_ugamma->SetPxPyPzE((pGamma[i]).px(), (pGamma[i]).py(), (pGamma[i]).pz(), (pGamma[i]).e());
+			p_ugamma1->SetPxPyPzE((pGamma[i]).px(), (pGamma[i]).py(), (pGamma[i]).pz(), (pGamma[i]).e());
+			p_ugamma2->SetPxPyPzE((pGamma[j]).px(), (pGamma[j]).py(), (pGamma[j]).pz(), (pGamma[j]).e());
+		}
 	}
 	if( chi4C >= 99999. ) return StatusCode::SUCCESS;
 	Ncut5++;	//after 4C
 
 	*p_ee=*p_ep+*p_em;
 	*p_pipi=*p_pip+*p_pim;
-	*p_gee=*p_ep+*p_em+*p_gamma;
-	*p_gpipi=*p_pip+*p_pim+*p_gamma;
+	*p_gg=*p_gamma1+*p_gamma2;
+	*p_ggpipi=*p_pip+*p_pim+*p_gamma1+*p_gamma2;
+	*p_recpipi=p4_jpsi-*p_pipi;
+	
 	*p_uee=*p_uep+*p_uem;
 	*p_upipi=*p_upip+*p_upim;
-	*p_ugee=*p_uep+*p_uem+*p_ugamma;
-	*p_ugpipi=*p_upip+*p_upim+*p_ugamma;
-	*p_recpipi=p4_jpsi-*p_pipi;
+	*p_ugg=*p_ugamma1+*p_ugamma2;
+	*p_uggpipi=*p_upip+*p_upim+*p_ugamma1+*p_ugamma2;
 
-	m_gpipi=p_gpipi->M();
-	m_gee=p_gee->M();
 	m_ee=p_ee->M();
+	m_gg=p_gg->M();
+	m_ggpipi=p_ggpipi->M();
 	m_uee=p_uee->M();
 	m_recpipi=p_recpipi->M();
+	
 	int flag_highe=pKal[flag_ep]>pKal[flag_em]?flag_ep:flag_em;
 	int flag_lowe=pKal[flag_ep]<pKal[flag_em]?flag_ep:flag_em;
 	highe_eop=eop[flag_highe];
@@ -994,7 +1027,7 @@ StatusCode EtaPiPiEE::execute() {
 		HepSymMatrix xem1e = vtxfite->Evx(0);
 
 		RecMdcKalTrack::setPidType(RecMdcKalTrack::electron);
-	GammaConv gconv = GammaConv(mdcTrk_em->helix(),mdcTrk_ep->helix(),OP);
+		GammaConv gconv = GammaConv(mdcTrk_em->helix(),mdcTrk_ep->helix(),OP);
 		m_epemx = gconv.getRX();
 		m_epemy = gconv.getRY();
 		m_epemz= gconv.getRZ();
@@ -1040,10 +1073,10 @@ StatusCode EtaPiPiEE::finalize() {
 	TreeAna->Write();
 	if(m_saveCutFlow == 1) NbInfo->Write();
 	saveFile->Close();
-	cout<<endl<<"Finalize psi'-> eta' e+ e-  ,eta'->gam pi+ pi-"<<endl;;
+	cout<<endl<<"Finalize psi'-> eta' e+ e-  ,eta'->eta pi+ pi- ,eta->gam + gam "<<endl;;
 	cout<<"Total number:                         "<<Ncut0<<endl;
 	cout<<"nGood==4, nCharge==0:                 "<<Ncut1<<endl;
-	cout<<"nGamma>=1:                            "<<Ncut2<<endl;
+	cout<<"nGamma>=2:                            "<<Ncut2<<endl;
 	cout<<"PID success:                          "<<Ncut3<<endl;
 	cout<<"vertex fit:                           "<<Ncut4<<endl;
 	cout<<"4C success:                           "<<Ncut5<<endl;
