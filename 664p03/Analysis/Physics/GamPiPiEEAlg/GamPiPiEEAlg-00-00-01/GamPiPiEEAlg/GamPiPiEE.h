@@ -5,6 +5,7 @@
 #include "GaudiKernel/Algorithm.h"
 #include "GaudiKernel/NTuple.h"
 //#include "VertexFit/ReadBeamParFromDb.h"
+#include "PartPropSvc/PartPropSvc.h"  
 
 
 #include <string>
@@ -13,6 +14,21 @@
 #include <TLorentzVector.h>
 #include <TFile.h>
 #include <TClonesArray.h>
+
+#include "TROOT.h"
+#include "TBenchmark.h"
+
+#include "EvtRecEvent/EvtRecEvent.h"
+#include "EvtRecEvent/EvtRecTrack.h"
+
+#include "CLHEP/Matrix/SymMatrix.h"
+#include "CLHEP/Matrix/Matrix.h"
+#include "CLHEP/Matrix/Vector.h"
+#include "CLHEP/Vector/LorentzVector.h"
+#include "CLHEP/Vector/ThreeVector.h"
+#include "VertexFit/WTrackParameter.h"
+#include "MdcRecEvent/RecMdcTrack.h"
+#include "MdcRecEvent/RecMdcKalTrack.h"
 
 class GamPiPiEE:public Algorithm{
 
@@ -23,6 +39,13 @@ class GamPiPiEE:public Algorithm{
 		StatusCode finalize();  
 
 	private:
+		IPartPropSvc *p_PartPropSvc;
+		HepPDT::ParticleDataTable* m_particleTable;
+
+        void corgen(HepMatrix &, HepVector &, int );
+        void corset(HepSymMatrix &, HepMatrix &, int );
+        void calibration(RecMdcKalTrack * , HepVector &, int );
+	
 		//global parameter
 		double m_Ecms;
 		double m_EnergySpread;
@@ -31,28 +54,13 @@ class GamPiPiEE:public Algorithm{
 		std::string m_OutputFileName;
 		TFile *saveFile;
 		TTree *TreeAna;
-		TTree *TopoTree;
 		TTree *NbInfo;
-
 
 		int m_saveTopo;
 		int m_saveMCTruth;
-		int m_saveTopoTree;
 		int m_saveCutFlow;
 
-		int runid;
-		int evtid;
-		int nevt;
-		int nNEUTRAL;
-		int nCHARGED;
-		int nTRACKS;
-		int nGamma;
-	
-		int useVxfitCut;
-		int useKmfitCut;
-
 		// Declare cut parameters initinal value
-		int m_NGamma;
 		double m_vr0cut;
 		double m_vz0cut;
 		double m_trkAngCut;
@@ -64,25 +72,36 @@ class GamPiPiEE:public Algorithm{
 		double barcut;
 		double endmin;
 		double endmax;
-		double gamiso;
+		int gamiso;
+		int m_NGamma;
+		int mc_cor;
 		
 		//for MC topology and MCtruth
-		unsigned int conexc_flag1;
-		unsigned int conexc_flag2;
 		int m_idxmc;
 		int m_drank[500];
 		int m_pdgid[500];
 		int m_motheridx[500];
 		int m_motherpid[500];
-		int isSig;
+
+		int issig;
+		double xmee;
 		TLorentzVector *xep;
 		TLorentzVector *xem;
 		TLorentzVector *xpip;
 		TLorentzVector *xpim;
 		TLorentzVector *xgamma;
-		TLorentzVector *xetap;
+		TLorentzVector *xgee;
 		TLorentzVector *xee;
+		TLorentzVector *xetap;
 
+		//event info
+		int runid;
+		int evtid;
+		int nNEUTRAL;
+		int nCHARGED;
+		int nTRACKS;
+		int nGamma;
+		
 		//Good Gamma
 		TClonesArray *GammaAll;
 		double costheta_gamma[500];
@@ -91,106 +110,140 @@ class GamPiPiEE:public Algorithm{
 		double isoAngle[500];
 		double showerde;
 
-		//track  info		
+		//vertex  info		
 		double vx[3],Evx[3];
+	
+		//track
 		double costheta_chrgd[4];
 		double Rxy[4];
 		double Rz[4];
 		double Rvxy[4];
 		double Rvz[4];
-		double m_deTrk[4];
-		double m_pTrk[4];
-		double m_epTrk[4];
-		double m_PtTrk[4];
-		int m_hitsTrk[4];
-		
+		double pKal[4];
+		double pxKal[4];
+		double pyKal[4];
+		double pzKal[4];
+		double deemc[4];
+		double eop[4];
+
 		//pid info.
 		int flag_pip;
 		int flag_pim;
 		int flag_ep;
 		int flag_em;
-		double chiDeDx[4][3];
-		double chiTof[4][3];
-		double chiTof1[4][3];
-		double chiTof2[4][3];
-		double chisq_pid[4][3];
+
 		double prob[4][3];
-		
-		//for gamma_conv
-		double m_rconv;
-		double m_xconv1;
-		double m_yconv1;
-		double m_zconv1;
-		double m_rconv1;
-		double m_xconv2;
-		double m_yconv2;
-		double m_zconv2;
-		double m_rconv2;
-		double m_xiep;
-		double m_deltaxy;
-		double m_cthep;
-		double m_ptrkp;
-		double m_ptrkm;
-		double m_mgamma;
-		double m_egamma;
-		double m_theta;
-		double m_cosTheta;
-		double m_phi;
-		
+
 		//for vertex fit
 		double vtxchisq;	
-		double vtxchisqee;	
-		double vtxchisqpipi;	
 
 		//for 4C-fit
-		int min4C_index;
-		double chi4C[500];
-		TClonesArray *pep;			//for results after fit
-		TClonesArray *pem; 	
-		TClonesArray *ppip; 	
-		TClonesArray *ppim;
-		TClonesArray *pgamma;
-		TClonesArray *petap;
-		TClonesArray *pee;
-		
-		double min_chi4C;
-		double min_chi4C_unfit;
-		TLorentzVector *min_ep;			//for mini-chi4C 4-momentum after fit
-		TLorentzVector *min_em; 
-		TLorentzVector *min_pip; 
-		TLorentzVector *min_pim; 
-		TLorentzVector *min_gamma; 
-		TLorentzVector *min_etap; 
-		TLorentzVector *min_ee; 
-		TLorentzVector *rec_ee; 
+		double chi4C;
+		TLorentzVector *p_pip;			//after fit
+		TLorentzVector *p_pim; 
+		TLorentzVector *p_ep; 
+		TLorentzVector *p_em; 
+		TLorentzVector *p_gamma;		
+		TLorentzVector *p_pipi; 
+		TLorentzVector *p_ee; 
+		TLorentzVector *p_gee; 
+		TLorentzVector *p_gpipi; 
+		TLorentzVector *p_recpipi;
 
-		TLorentzVector *min_ep_unfit;			//no 4C
-		TLorentzVector *min_em_unfit; 
-		TLorentzVector *min_pip_unfit; 
-		TLorentzVector *min_pim_unfit; 
-		TLorentzVector *min_gamma_unfit; 
-		TLorentzVector *min_etap_unfit; 
-		TLorentzVector *min_ee_unfit; 
-		TLorentzVector *rec_ee_unfit; 
-	
+		TLorentzVector *p_upip;			//no fit
+		TLorentzVector *p_upim; 
+		TLorentzVector *p_uep; 
+		TLorentzVector *p_uem; 
+		TLorentzVector *p_ugamma;		
+		TLorentzVector *p_upipi; 
+		TLorentzVector *p_uee; 
+		TLorentzVector *p_ugee; 
+		TLorentzVector *p_ugpipi; 
 
-		TLorentzVector *hel_ep;
-		TLorentzVector *hel_pip;
-		TLorentzVector *hel_em;
-		TLorentzVector *hel_pim;
-		TLorentzVector *hel_gam;
-
-		double hel_cos[5]; 
-		double mpipi;
+		double m_gee;
+		double m_gpipi;
 		double angee;
-		double angee_unfit;
-		double cosee;
-		double mee;
-		double mee_unfit;
-		double metap;
-		double mgee;
-		double m_rec_ee;
-		double m_rec_ee_unfit;
+		double m_uee;
+		double m_ee;
+		double m_recpipi;
+		double highe_eop;
+		double lowe_eop;
+
+		Double_t em_pull_0;
+		Double_t em_pull_1;
+		Double_t em_pull_2;
+		Double_t em_pull_3;
+		Double_t em_pull_4;
+		Double_t ep_pull_0;
+		Double_t ep_pull_1;
+		Double_t ep_pull_2;
+		Double_t ep_pull_3;
+		Double_t ep_pull_4;
+		Double_t pip_pull_0;
+		Double_t pip_pull_1;
+		Double_t pip_pull_2;
+		Double_t pip_pull_3;
+		Double_t pip_pull_4;
+		Double_t pim_pull_0;
+		Double_t pim_pull_1;
+		Double_t pim_pull_2;
+		Double_t pim_pull_3;
+		Double_t pim_pull_4;
+
+		Double_t m_rconv;
+		Double_t m_xconv1;
+		Double_t m_yconv1;
+		Double_t m_zconv1;
+		Double_t m_rconv1;
+		Double_t m_xconv2;
+		Double_t m_yconv2;
+		Double_t m_zconv2;
+		Double_t m_rconv2;
+		Double_t m_xiep;
+		Double_t m_deltaxy;
+		Double_t m_deltaz1;
+		Double_t m_deltaz2;
+		Double_t m_lep;
+		Double_t m_psipair;
+		//                Double_t m_dgamma;
+		Double_t MEE;
+		Double_t m_vx_x;
+		Double_t m_vx_y;
+		Double_t m_vx_r;
+		Double_t m_thetaeg1;
+		Double_t m_thetaeg2;
+		Double_t m_cthep;
+		Double_t m_ptrkp;
+		Double_t m_ptrkm;
+		Double_t m_mgamma;
+		Double_t m_egamma;
+		Double_t m_theta;
+		Double_t m_cosTheta;
+		Double_t m_phi;
+		Double_t m_rp;
+		Double_t m_re;
+		Double_t m_deltaeq;
+		Double_t m_case;
+
+		//gamma conversion (zhangyt)
+		double vtxchie; 
+		double m_epemx;
+		double m_epemy;
+		double m_epemz;
+		double m_epemxy;
+		double m_mepr;
+		double m_mepcenterx;
+		double m_mepcentery;
+		double m_mepcenterz;
+		double m_memr;
+		double m_memcenterx;
+		double m_memcentery;
+		double m_memcenterz;
+		double m_epemxxorigin1e;
+		double m_epemyxorigin1e;
+		double m_epemzxorigin1e;
+		double m_epemxyxorigin1e;
+		double m_rconvz;
 };
 
 #endif 

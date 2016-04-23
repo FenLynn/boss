@@ -2,4 +2,4 @@
 ApplicationMgr.DLLs += {"GamPiPiEEAlg"};
 ApplicationMgr.TopAlg += { "GamPiPiEE" };
 
-GamPiPiEE.mc_cor=0;
+GamPiPiEE.mc_cor=1;

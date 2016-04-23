@@ -96,8 +96,8 @@ int Ncut4 = 0;		//Pass Vertex
 int Ncut5 = 0;		//Pass 4C
 int Ncut6 = 0;		
 int Ncut7 = 0;
-int Ncut8 = 0;
-int Ncut9 = 0;
+int Ncut8 = 0;		//anti-proton bad ext
+int Ncut9 = 0;		//anti-protoon bad emc
 /////////////////////////////////////////////////////////////////////////////
 
 XisP3Pi::XisP3Pi(const std::string& name, ISvcLocator* pSvcLocator) :
@@ -576,9 +576,9 @@ StatusCode XisP3Pi::execute() {
 		if(fabs(dang) < m_gammaAngleCut) continue;
 
 		EvtRecTrackIterator ktTrk = evtRecTrkCol->begin() + iGood[flag_prom];
-		if(!(*ktTrk)->isExtTrackValid()) {cout<<"anti-proton track invalid!"<<endl;return StatusCode::SUCCESS;}
+		if(!(*ktTrk)->isExtTrackValid()) {Ncut8++;return StatusCode::SUCCESS;}
 		RecExtTrack *extTrk_pm = (*ktTrk)->extTrack();
-		if(extTrk_pm->emcVolumeNumber() == -1)  {cout<<"anti-proton emc info invalid!"<<endl;return StatusCode::SUCCESS;}
+		if(extTrk_pm->emcVolumeNumber() == -1)  {Ncut9++;return StatusCode::SUCCESS;}
 		Hep3Vector extpos_pm = extTrk_pm->emcPosition();//-xorigin; vertex correction!maybe effect is small
 
 		double ang_gampm = extpos_pm.angle(emcpos);
@@ -742,7 +742,7 @@ StatusCode XisP3Pi::execute() {
 		vtxfit1->AddVertex(0, vxpar, 0, 1);
 		if( !(vtxfit1->Fit(0)) ) continue;
 		vtxfit1->Swim(0);
-		chi_vtxLam[nVtxok]=vtxfit1->chisq();
+		chi_vtxLam[nVtxok]=vtxfit1->chisq(0);
 		vtxfit1->BuildVirtualParticle(0);
 
 		HepLorentzVector hv_prop = vtxfit1->pfit(0);
@@ -761,7 +761,7 @@ StatusCode XisP3Pi::execute() {
 		vtxfit2->AddVertex(0, vxpar, 0, 1);
 		if( !(vtxfit2->Fit(0)) ) continue;
 		vtxfit2->Swim(0);
-		chi_vtxXi[nVtxok]=vtxfit2->chisq();
+		chi_vtxXi[nVtxok]=vtxfit2->chisq(0);
 		vtxfit2->BuildVirtualParticle(0);
 
 		HepLorentzVector hv_xipim = vtxfit2->pfit(1);         
@@ -855,6 +855,9 @@ StatusCode XisP3Pi::finalize() {
 	cout<<"nGamma>=2&&nGamma<=15:                "<<Ncut3<<endl;
 	cout<<"1C:		                             "<<Ncut4<<endl;
 	cout<<"vertex fit:                           "<<Ncut5<<endl;
+	cout<<"-----------                           "<<endl;
+	cout<<"anti-proton bad ext                   "<<Ncut8<<endl;
+	cout<<"anti-proton bad emc                   "<<Ncut9<<endl;
 	cout<<"_ENDTAG_"<<endl;
 	MsgStream log(msgSvc(), name());
 	log << MSG::INFO << "in finalize()" << endmsg;
