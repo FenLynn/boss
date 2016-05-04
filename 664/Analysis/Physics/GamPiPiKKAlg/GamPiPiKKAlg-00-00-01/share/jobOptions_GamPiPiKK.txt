@@ -1,0 +1,5 @@
+#include "$VERTEXFITROOT/share/jobOptions_VertexDbSvc.txt"
+ApplicationMgr.DLLs += {"GamPiPiKKAlg"};
+ApplicationMgr.TopAlg += { "GamPiPiKK" };
+
+GamPiPiKK.mc_cor=0;
